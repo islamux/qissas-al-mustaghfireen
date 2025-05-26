@@ -1,5 +1,10 @@
 # QissasAlMustaghfireen
 
+## 📝 Brief
+
+A collection of stories and lessons for those who seek forgiveness, implemented as a Kotlin/Java application.  
+The project aims to provide inspirational content, easy navigation, and a user-friendly experience.
+
 📚 **QissasAlMustaghfireen** is a Kotlin/Java project.  
 This repository contains the source code and resources for the application.
 
