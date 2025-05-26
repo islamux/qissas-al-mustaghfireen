@@ -1,5 +1,8 @@
 package com.islamux.qissas_al_mustaghfireen.ui
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -10,6 +13,7 @@ import androidx.navigation.navArgument
 import com.islamux.qissas_al_mustaghfireen.viewmodel.StoryViewModel
 
 sealed class Screen(val route: String) {
+    object SplashScreen : Screen("splash_screen") // Added SplashScreen
     object MainScreen : Screen("main_screen")
     object StoryDetailScreen : Screen("story_detail_screen/{storyId}") {
         fun createRoute(storyId: Int) = "story_detail_screen/$storyId"
@@ -21,7 +25,14 @@ fun AppNavHost(
     navController: NavHostController,
     storyViewModel: StoryViewModel = viewModel() // Use viewModel delegate here
 ) {
-    NavHost(navController = navController, startDestination = Screen.MainScreen.route) {
+    NavHost(navController = navController, startDestination = Screen.SplashScreen.route) { // Changed startDestination
+        composable(Screen.SplashScreen.route) {
+            SplashScreen(onTimeout = {
+                navController.navigate(Screen.MainScreen.route) {
+                    popUpTo(Screen.SplashScreen.route) { inclusive = true }
+                }
+            })
+        }
         composable(Screen.MainScreen.route) {
             MainScreen(
                 storyViewModel = storyViewModel,
@@ -36,7 +47,11 @@ fun AppNavHost(
         }
         composable(
             route = Screen.StoryDetailScreen.route,
-            arguments = listOf(navArgument("storyId") { type = NavType.IntType })
+            arguments = listOf(navArgument("storyId") { type = NavType.IntType }),
+            enterTransition = { slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(300)) },
+            exitTransition = { slideOutHorizontally(targetOffsetX = { -it }, animationSpec = tween(300)) },
+            popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }, animationSpec = tween(300)) },
+            popExitTransition = { slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(300)) }
         ) { backStackEntry ->
             val storyId = backStackEntry.arguments?.getInt("storyId")
             if (storyId != null) {
