@@ -2,11 +2,16 @@ package com.islamux.qissas_al_mustaghfireen.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,9 +32,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.islamux.qissas_al_mustaghfireen.model.Story
+import com.islamux.qissas_al_mustaghfireen.ui.theme.OceanCyan
+import com.islamux.qissas_al_mustaghfireen.ui.theme.OceanDarkTeal
+import com.islamux.qissas_al_mustaghfireen.ui.theme.SunsetOrange
+import com.islamux.qissas_al_mustaghfireen.ui.theme.SunsetPink
+import com.islamux.qissas_al_mustaghfireen.ui.theme.SunsetYellow
 import com.islamux.qissas_al_mustaghfireen.viewmodel.StoryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,28 +53,55 @@ fun MainScreen(
 ) {
     val stories by storyViewModel.stories.collectAsState()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "قصص المستغفرين",
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.titleLarge
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient( // This is the main screen background gradient
+                    colors = listOf(
+                        OceanDarkTeal.copy(alpha = 0.8f), // Make screen background slightly less intense
+                        OceanCyan.copy(alpha = 0.6f)
                     )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
-        }
-    ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+    ) {
+        Scaffold(
+            containerColor = Color.Transparent, // Make Scaffold background transparent
+            topBar = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            brush = Brush.horizontalGradient( // Gradient for the TopAppBar
+                                colors = listOf(
+                                    OceanDarkTeal,
+                                    OceanCyan
+                                )
+                            )
+                        )
+                ) {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                text = "قصص المستغفرين",
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.titleLarge
+                                // Color will be set by titleContentColor
+                            )
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent, // TopAppBar itself is transparent
+                            titleContentColor = Color.White     // Text color on gradient
+                        )
+                    )
+                }
+            }
+        ) { paddingValues ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
                 .padding(horizontal = 8.dp), // Keep horizontal padding for screen edges
             verticalArrangement = Arrangement.spacedBy(8.dp) // Add spacing between items
         ) {
@@ -87,30 +127,54 @@ fun MainScreen(
 
 @Composable
 fun StoryListItem(story: Story, onItemClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(targetValue = if (pressed) 0.98f else 1f, label = "cardScale")
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onItemClick),
-        shape = RoundedCornerShape(12.dp), // Added rounded corners
+            .scale(scale) // Apply scale animation
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null, // Disable default ripple, using scale instead
+                onClick = onItemClick
+            ),
+        shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp,
-            pressedElevation = 4.dp, // Added pressed elevation
-            hoveredElevation = 4.dp  // Added hovered elevation (for platforms that support it)
-        ),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            defaultElevation = 4.dp, // Slightly increased elevation for gradient cards
+            pressedElevation = 6.dp,
+            hoveredElevation = 6.dp
+        )
+        // colors will be handled by a Box with background gradient
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = story.title,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 6.dp) // Increased bottom padding slightly
-            )
-            Text(
-                text = story.excerpt,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 3, // Show a snippet of the excerpt
-                // TextAlign.Start is default for Arabic text based on content
-            )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.linearGradient( // Diagonal gradient
+                        colors = listOf(SunsetOrange, SunsetPink, SunsetYellow),
+                        // start = Offset(0f, Float.POSITIVE_INFINITY), // bottom-left
+                        // end = Offset(Float.POSITIVE_INFINITY, 0f)    // top-right
+                        // Default diagonal is top-start to bottom-end, which works fine.
+                    )
+                )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = story.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.Black, // Ensure contrast on Sunset gradient
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+                Text(
+                    text = story.excerpt,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Black, // Ensure contrast on Sunset gradient
+                    maxLines = 3,
+                    // TextAlign.Start is default for Arabic text based on content
+                )
+            }
         }
     }
 }
