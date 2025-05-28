@@ -47,6 +47,60 @@ import com.islamux.qissas_al_mustaghfireen.viewmodel.StoryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+fun StoryListItem(story: Story, onItemClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(targetValue = if (pressed) 0.98f else 1f, label = "cardScale")
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .scale(scale) // Apply scale animation
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null, // Disable default ripple, using scale instead
+                onClick = onItemClick
+            ),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp, // Slightly increased elevation for gradient cards
+            pressedElevation = 6.dp,
+            hoveredElevation = 6.dp
+        )
+        // colors will be handled by a Box with background gradient
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.linearGradient( // Diagonal gradient
+                        colors = listOf(SunsetOrange, SunsetPink, SunsetYellow),
+                        // start = Offset(0f, Float.POSITIVE_INFINITY), // bottom-left
+                        // end = Offset(Float.POSITIVE_INFINITY, 0f)    // top-right
+                        // Default diagonal is top-start to bottom-end, which works fine.
+                    )
+                )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = story.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.Black, // Ensure contrast on Sunset gradient
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+                Text(
+                    text = story.excerpt,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Black, // Ensure contrast on Sunset gradient
+                    maxLines = 3,
+                    // TextAlign.Start is default for Arabic text based on content
+                )
+            }
+        }
+    }
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun MainScreen(
     storyViewModel: StoryViewModel,
     onNavigateToStory: (Int) -> Unit
@@ -125,56 +179,4 @@ fun MainScreen(
     }
 }
 
-@Composable
-fun StoryListItem(story: Story, onItemClick: () -> Unit) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(targetValue = if (pressed) 0.98f else 1f, label = "cardScale")
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .scale(scale) // Apply scale animation
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null, // Disable default ripple, using scale instead
-                onClick = onItemClick
-            ),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp, // Slightly increased elevation for gradient cards
-            pressedElevation = 6.dp,
-            hoveredElevation = 6.dp
-        )
-        // colors will be handled by a Box with background gradient
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.linearGradient( // Diagonal gradient
-                        colors = listOf(SunsetOrange, SunsetPink, SunsetYellow),
-                        // start = Offset(0f, Float.POSITIVE_INFINITY), // bottom-left
-                        // end = Offset(Float.POSITIVE_INFINITY, 0f)    // top-right
-                        // Default diagonal is top-start to bottom-end, which works fine.
-                    )
-                )
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = story.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.Black, // Ensure contrast on Sunset gradient
-                    modifier = Modifier.padding(bottom = 6.dp)
-                )
-                Text(
-                    text = story.excerpt,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Black, // Ensure contrast on Sunset gradient
-                    maxLines = 3,
-                    // TextAlign.Start is default for Arabic text based on content
-                )
-            }
-        }
-    }
 }
